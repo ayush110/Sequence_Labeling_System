@@ -6,7 +6,7 @@ def get_sequences_dataset(dataset_path: str) -> List[List[Tuple[str, str]]]:
     Parses the dataset file into a list of sequences.
     Each sequence is a list of (observation, state) tuples.
     """
-    with open(dataset_path) as f:
+    with open(dataset_path, encoding="utf-8") as f:
         lines = [line.strip() for line in f]
 
     sequences: List[List[Tuple[str, str]]] = []
