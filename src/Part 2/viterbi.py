@@ -1,12 +1,14 @@
 from typing import Dict, List
 
+import numpy as np
+
 
 def viterbi(
     transition_probabilities: Dict[str, Dict[str, float]],
     emission_probabilities: Dict[str, Dict[str, float]],
-    observation_sequence: List[str],
     initial_probabilities: Dict[str, float],
     final_probabilities: Dict[str, float],
+    observation_sequence: List[str],
     top_k=1,
 ):
     # transition is transition_probabilities[state i-1]= {state 0 to n each with a float}
@@ -15,19 +17,86 @@ def viterbi(
     # maybe also input the initial probabilities (START->y) and final probabilities (STOP->y)
     # determine whether this is part of the transition probabiliteis or not
 
-    state_keys = transition_probabilities.keys()
-    N = len(state_keys)
+    states = list(transition_probabilities.keys())  # this will be used for the pi table
+    N = len(states)
+    # Mapping states and observations to indices
+    state_to_idx = {s: i for i, s in enumerate(states)}
+    idx_to_state = {i: s for s, i in state_to_idx.items()}
 
     # Get the keys from the first state's emission dictionary
     first_state = next(iter(emission_probabilities))
-    observation_keys = emission_probabilities[first_state].keys()
-    V = len(observation_keys)
+    observations = list(emission_probabilities[first_state].keys())
+    V = len(observations)
+    obs_to_idx = {o: i for i, o in enumerate(observations)}
 
     n = len(observation_sequence)
 
-    dp = [0] * N
+    # Transition matrix A[v][u] is probability of v -> u
+    A = np.zeros((N, N))
+    for from_state, to_probs in transition_probabilities.items():
+        for to_state, prob in to_probs.items():
+            A[state_to_idx[from_state]][state_to_idx[to_state]] = prob
 
-    # extract the set of transition probabilities
-    # convert to numpy matrices for each
-    # create a dp table (forward pass)
+    # Emission matrix B[u][x] is probability of u emitting observation x
+    B = np.zeros((N, V))
+    for state, obs_probs in emission_probabilities.items():
+        for obs, prob in obs_probs.items():
+            B[state_to_idx[state]][obs_to_idx[obs]] = prob
+
+    # dp table, need to add start and final probabilities
+    # pi(0, START) = 1 so only consider paths from START for the first state i=1
+    # pi(n+1, STOP) = max
+    # this will be for from state 1 to n
+    pi = np.zeros((n, N))
+    # backpointer will need to support k backpointers for top-k paths
+    backpointer = np.zeros((n, N), dtype=int)
+
+    # FORWARD PASS
+    # base case: pi(0, START) = 1 so only consider paths from START for the first state i=1
+    for s in range(N):
+        state = idx_to_state[s]
+        # first observation
+        x_1 = observation_sequence[0]
+        x_1_idx = obs_to_idx[x_1]
+
+        # get a_START, state from initial_probabilities
+        transition = initial_probabilities[state]
+        emission = B[s][x_1_idx]
+
+        # make each probability s transition probablity from start * emission(x)
+        pi[0][s] = transition * emission
+
+        backpointer[0][s] = 0
+
+    # dp j=(1, ... n)
+    for j in range(1, n):
+        x_j = observation_sequence[j]
+        x_j_idx = obs_to_idx[x_j]
+
+        for s in range(N):
+            # take the max of the array that contains pi[ps][s]*A[ps][s]*B[s][x_j_idx]
+            max_prob = 0
+            best_prev_s = 0
+            # can maximize accross transitions*pi(j-1) since emissions are independent of previous state
+            for ps in range(N):
+                prob = pi[j - 1][s] * A[ps][s]
+                if prob > max_prob:
+                    max_prob = prob
+                    best_prev_s = ps
+
+            backpointer[t][s] = best_prev_s
+
+            emission = B[s][x_j_idx]
+            pi[j][s] = max_prob * emission
+
+    # final step:
+    pi_j = np.array(N)
+    for s in range(N):
+        state = idx_to_state[s]
+
+        transition = final_probabilities[state]
+        pi_j[s] = transition * pi[-1][s]
+
+    # BACKWARD PASS (reconstruction)
     # reconstruct the best path (list of states) should be able to later store top-k
+    # TODO
