@@ -47,3 +47,20 @@ def get_unique_observations(dataset: List[List[Tuple[str, str]]]) -> Set[str]:
         for observation, _ in sequence:
             observations.add(observation)
     return observations
+
+
+def write_predictions_to_file(predictions, output_file_path):
+    """
+    Example format of predictions dictionary
+    predictions = {
+        0: [[("Municipal", "B-NP"), ("bonds", "I-NP"), ("are", "B-VP"), ...]],
+        1: [[("He", "B-NP"), ("added", "B-VP"), ("that", "B-SBAR"), ...]],
+        ...
+    }
+    """
+    with open(output_file_path, "w", encoding="UTF-8") as f:
+        for example in predictions:
+            for entity in predictions[example]:
+                for word, label in entity:
+                    f.write(f"{word} {label}\n")
+                f.write("\n")
