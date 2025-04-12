@@ -64,3 +64,28 @@ def write_predictions_to_file(predictions, output_file_path):
                 for word, label in entity:
                     f.write(f"{word} {label}\n")
                 f.write("\n")
+
+def parse_test_data(test_data_path: str) -> List[List[str]]:
+    """
+    Parses the test data file into a list of sequences.
+    Each sequence is a list of observations (words).
+    """
+    with open(test_data_path) as f:
+        lines = [line.strip() for line in f]
+
+    sequences: List[List[str]] = []
+    seq: List[str] = []
+
+    for line in lines:
+        if line:
+            parts = line.split()
+            if len(parts) == 1:
+                seq.append(parts[0])
+        else:
+            if seq:
+                sequences.append(seq)
+                seq = []
+    if seq:
+        sequences.append(seq)
+
+    return sequences
