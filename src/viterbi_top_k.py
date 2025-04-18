@@ -1,4 +1,6 @@
 
+import heapq
+
 
 def viterbi_top_k(
     transition_probabilities: Dict[str, Dict[str, float]],
@@ -8,21 +10,17 @@ def viterbi_top_k(
     observation_sequence: List[str],
     top_k=1,
 ):
-    # transition is transition_probabilities[state i-1]= {state 0 to n each with a float}
-    # emission is emission_probabilities[state i] = {observation 0 to n each with a float}
-
     states = list(transition_probabilities.keys())  # this will be used for the pi table
-    N = len(states)
-    # Mapping states and observations to indices
     state_to_idx = {s: i for i, s in enumerate(states)}
     idx_to_state = {i: s for s, i in state_to_idx.items()}
 
     # Get the keys from the first state's emission dictionary
     first_state = next(iter(emission_probabilities))
     observations = list(emission_probabilities[first_state].keys())
-    V = len(observations)
     obs_to_idx = {o: i for i, o in enumerate(observations)}
 
+    N = len(states)
+    V = len(observations)
     n = len(observation_sequence)
 
     # Transition matrix A[v][u] is probability of v -> u
@@ -37,12 +35,14 @@ def viterbi_top_k(
         for obs, prob in obs_probs.items():
             B[state_to_idx[state]][obs_to_idx[obs]] = prob
 
-    # dp table for probabilities and backpointers
-    # pi[i][j][k] stores the k-th best probability for state j at position i
-    pi = np.zeros((n, N, top_k))
-    # backpointer[i][j][k] stores the previous state for the k-th best path to state j at position i
-    backpointer = np.zeros((n, N, top_k), dtype=int)
+    # dp table, need to add start and final probabilities
+    # pi(0, START) = 1 so only consider paths from START for the first state i=1
+    # pi(n+1, STOP) = max
+    # this will be for from state 1 to n
+    pi = [[[] for _ in range(N)] for _ in range(n)]
+    # pi[j][s] will be a list of tuples (probability, path) for the top-k paths
 
+    # each node in the dp table will store the top-k paths that led to that node (max-heap)
     # FORWARD PASS
     # base case: pi(0, START) = 1 so only consider paths from START for the first state i=1
     for s in range(N):
@@ -56,8 +56,10 @@ def viterbi_top_k(
         emission = B[s][x_1_idx]
 
         # make each probability s transition probablity from start * emission(x)
-        pi[0][s][0] = transition * emission
-        backpointer[0][s][0] = 0
+        score = _safe_log(transition) + _safe_log(emission)
+        pi[0][s].append(
+            -score, [s]
+        )  # store negative scores for maxheap (heapq is minheap)
 
     # dp j=(1, ... n)
     for j in range(1, n):
@@ -65,48 +67,45 @@ def viterbi_top_k(
         x_j_idx = obs_to_idx[x_j]
 
         for s in range(N):
-            # For each state s, find top-k paths leading to it
-            all_probs = []
+            # take the top-k of the array that contains pi[ps][s]*A[ps][s]*B[s][x_j_idx]
+            heap = []
             for ps in range(N):
-                for k in range(top_k):
-                    if pi[j-1][ps][k] > 0:  # Only consider valid paths
-                        prob = pi[j-1][ps][k] * A[ps][s] * B[s][x_j_idx]
-                        all_probs.append((prob, ps, k))
-            
-            # Sort all probabilities and take top-k
-            all_probs.sort(reverse=True, key=lambda x: x[0])
-            top_k_probs = all_probs[:top_k]
-            
-            # Store the top-k probabilities and their backpointers
-            for k, (prob, prev_state, prev_k) in enumerate(top_k_probs):
-                pi[j][s][k] = prob
-                backpointer[j][s][k] = prev_state
+                # add all top-k paths from the previous state
+                for neg_score, path in pi[j - 1][ps]:
+                    # score = prev_score + transition + emission
+                    score = neg_score + _safe_log(A[ps][s]) + _safe_log(B[s][x_j_idx])
+                    new_path = path + [s]
+                    heap.append(-score, new_path)
+
+            # get the top-k paths from the heap
+            top_k_paths = heapq.nlargest(top_k, heap)
+            pi[j][s] = top_k_paths
 
     # final step:
-    # Find top-k final states
-    final_probs = []
+    # use a heap to store the net log probabilities of the top-k states for each final state
+    final_heap = []
     for s in range(N):
-        state = idx_to_state[s]
-        for k in range(top_k):
-            if pi[-1][s][k] > 0:  # Only consider valid paths
-                transition = final_probabilities[state]
-                prob = transition * pi[-1][s][k]
-                final_probs.append((prob, s, k))
-    
-    # Sort final probabilities and take top-k
-    final_probs.sort(reverse=True, key=lambda x: x[0])
-    top_k_final = final_probs[:top_k]
+        for neg_score, path in pi[-1][s]:
+            # add stop transitions
+            score = neg_score + _safe_log(final_probabilities[idx_to_state[s]])
+            new_path = path + [s]
+            final_heap.append(-score, new_path)
 
-    # BACKWARD PASS (reconstruction)
-    # Reconstruct the top-k paths
-    top_k_paths = []
-    for _, final_s, final_k in top_k_final:
-        path = [final_s]
-        for i in range(n-1, -1, -1):
-            prev_state = backpointer[i][path[0]][final_k]
-            path.insert(0, prev_state)
-        top_k_paths.append(path)
+    # BACKWARD PASS (reconstruction) isnt needed since we are passing along the paths
+    # get the top-k paths from the heap from largest to smallest (by negative score)
+    top_k_paths = heapq.nlargest(top_k, final_heap)
 
-    # Convert state indices to state names
-    decoded_paths = [[idx_to_state[i] for i in path] for path in top_k_paths]
-    return decoded_paths
+    for neg_score, path in top_k_paths:
+        # convert the state indices to state names
+        path = [idx_to_state[i] for i in path]
+        print(f"Path: {path}, Score: {-neg_score}")
+
+    # since we are using a max-heap with negative scores, the k-th largest path will be the first element
+    # imagine -0.1, -0.2, -0.3, -0.4, -0.5
+    # 0.1 is the k-th largest path
+    kth_largest_path = top_k_paths[0][1]
+    decoded_kth_largest_path = [
+        idx_to_state[i] for i in kth_largest_path
+    ]  # convert the state indices to state names
+    print(f"K-th largest path: {decoded_kth_largest_path}")
+    return decoded_kth_largest_path

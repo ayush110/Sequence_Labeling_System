@@ -26,7 +26,5 @@ def main():
 
     # Run the Viterbi algorithm on the test data dev.in
 
-
-    
 if __name__ == "__main__":
     main()
