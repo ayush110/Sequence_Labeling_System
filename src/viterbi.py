@@ -1,9 +1,7 @@
 from typing import Dict, List
 import numpy as np
 
-
-def _safe_log(x):
-    return -np.inf if x <= 0 else np.log(x)
+from utils import _safe_log
 
 
 def viterbi(
@@ -56,6 +54,7 @@ def viterbi(
     backpointer = np.zeros((n, N), dtype=int)
 
     # FORWARD PASS
+    # base case: pi(0, START) = 1 so only consider paths from START for the first state i=1
     for s in range(N):
         state = idx_to_state[s]
         x_1 = observation_sequence[0]
@@ -67,13 +66,16 @@ def viterbi(
         pi[0][s] = _safe_log(transition) + _safe_log(emission)
         backpointer[0][s] = 0
 
+    # dp j=(1, ... n)
     for j in range(1, n):
         x_j = observation_sequence[j]
         x_j_idx = obs_to_idx.get(x_j, obs_to_idx.get("#UNK#", -1))
 
         for s in range(N):
+            # take the max of the array that contains pi[ps][s]*A[ps][s]*B[s][x_j_idx]
             max_prob = -np.inf
             best_prev_s = 0
+            # can maximize accross transitions*pi(j-1) since emissions are independent of previous state
             for ps in range(N):
                 prob = pi[j - 1][ps] + _safe_log(A[ps][s])
                 if prob > max_prob:
@@ -92,9 +94,12 @@ def viterbi(
         pi_j[s] = _safe_log(transition) + _safe_log(pi[-1][s])
 
     # BACKWARD PASS (reconstruction)
+    # reconstruct the best path (list of states) should be able to later store top-k
+    # best to stop is the best state from pi_j
     top_1_final_s = np.argmax(pi_j)
     top_1_path = [top_1_final_s]
     for i in range(n - 1, -1, -1):
+        # find the best state
         top_1_path.insert(0, backpointer[i][top_1_path[0]])
 
     decoded_states = [idx_to_state[i] for i in top_1_path]
