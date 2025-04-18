@@ -1,6 +1,7 @@
 from typing import List, Tuple, Set
 
-iomport numpy as np
+import numpy as np
+
 
 def get_sequences_dataset(dataset_path: str) -> List[List[Tuple[str, str]]]:
     """
