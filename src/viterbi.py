@@ -1,7 +1,27 @@
 from typing import Dict, List
 import numpy as np
+import pandas as pd
 
 from utils import _safe_log
+
+
+def print_transition_matrix(A, states):
+    df = pd.DataFrame(A, index=states, columns=states)
+    print("\nTransition Matrix:")
+    print(df)
+
+
+def print_viterbi_table(pi, backpointer, observation_sequence, idx_to_state, states):
+    n = len(observation_sequence)
+    print("\nViterbi Table (log-probabilities and backpointers):")
+    for t in range(n):
+        print(f"t={t}, Observation={observation_sequence[t]}")
+        for s in range(len(states)):
+            state = idx_to_state[s]
+            print(
+                f"  State={state}, Log-Probability={pi[t][s]}, Backpointer={backpointer[t][s]}"
+            )
+        print("-" * 30)
 
 
 def viterbi(
@@ -68,14 +88,18 @@ def viterbi(
 
     # Initialize DP table for max log-probabilities
     pi = np.zeros((n, N))  # pi[j][s] = best score for reaching state s at time j
-    backpointer = np.zeros((n, N), dtype=int)  # tracks best previous state for reconstruction
+    backpointer = np.zeros(
+        (n, N), dtype=int
+    )  # tracks best previous state for reconstruction
 
     # FORWARD PASS
     # base case: pi(0, START) = 1 so only consider paths from START for the first state i=1
     for s in range(N):
         state = idx_to_state[s]
         x_1 = observation_sequence[0]
-        x_1_idx = obs_to_idx.get(x_1, obs_to_idx.get("#UNK#", -1))  # use UNK token if not found
+        x_1_idx = obs_to_idx.get(
+            x_1, obs_to_idx.get("#UNK#", -1)
+        )  # use UNK token if not found
 
         # transition from START → state and emission of first observation
         transition = initial_probabilities.get(state, 0.0)
@@ -85,16 +109,18 @@ def viterbi(
         pi[0][s] = _safe_log(transition) + _safe_log(emission)
         backpointer[0][s] = 0  # no real backpointer at step 0
 
+        print(
+            f"t=0, state={state}, transition={transition}, emission={emission}, pi={pi[0][s]}"
+        )
+
     # dp j=(1, ... n)
     for j in range(1, n):
         x_j = observation_sequence[j]
         x_j_idx = obs_to_idx.get(x_j, obs_to_idx.get("#UNK#", -1))
 
         for s in range(N):
-            # take the max of the array that contains pi[ps][s]*A[ps][s]*B[s][x_j_idx]
             max_prob = -np.inf
             best_prev_s = 0
-            # can maximize accross transitions*pi(j-1) since emissions are independent of previous state
             for ps in range(N):
                 # can maximize across transitions * pi(j-1), since emissions are independent of previous state
                 prob = pi[j - 1][ps] + _safe_log(A[ps][s])
@@ -107,6 +133,11 @@ def viterbi(
             pi[j][s] = max_prob + _safe_log(emission)
             backpointer[j][s] = best_prev_s
 
+            print(
+                f"t={j}, curr_state={idx_to_state[s]}, prev_state={idx_to_state[best_prev_s]}, "
+                f"max_prob={max_prob}, emission={emission}, pi={pi[j][s]}"
+            )
+
     # FINAL STEP: include transition to STOP
     pi_j = np.zeros(N)
     for s in range(N):
@@ -114,26 +145,34 @@ def viterbi(
         transition = final_probabilities.get(state, 0.0)
         # pi(n+1, STOP) = max over all paths that end in state s and transition to STOP
         pi_j[s] = _safe_log(transition) + _safe_log(pi[-1][s])
+        print(
+            f"Final transition from state={state} to STOP, prob={transition}, pi_j={pi_j[s]}"
+        )
 
-    # BACKWARD PASS (reconstruction)
-    # reconstruct the best path (list of states) should be able to later store top-k
-    # best to stop is the best state from pi_j
     top_1_final_s = np.argmax(pi_j)
+    # print(
+    #     f"Top-1 final state index: {top_1_final_s}, state: {idx_to_state[top_1_final_s]}"
+    # )
+
     top_1_path = [top_1_final_s]
     for i in range(n - 1, -1, -1):
-        # find the best state
         top_1_path.insert(0, backpointer[i][top_1_path[0]])
+        # print(
+        #     f"Backtrack step {i}, state index={top_1_path[0]}, state={idx_to_state[top_1_path[0]]}"
+        # )
 
     # Decode list of state indices into actual state labels
     decoded_states = [idx_to_state[i] for i in top_1_path]
+    print(f"Decoded sequence: {decoded_states}")
+    print_viterbi_table(pi, backpointer, observation_sequence, idx_to_state, states)
+    print_transition_matrix(A, states)
 
     return decoded_states
 
+
 def generate_viterbi_output(test_data, transition_probs, emission_probs):
     # Build observation vocabulary from the emission probabilities
-    known_words = set(
-        word for probs in emission_probs.values() for word in probs
-    )
+    known_words = set(word for probs in emission_probs.values() for word in probs)
 
     with open("../EN/dev.p2.out", "w") as f:
         for sentence in test_data:
