@@ -1,5 +1,7 @@
 from typing import List, Tuple, Set
 
+import numpy as np
+
 
 def get_sequences_dataset(dataset_path: str) -> List[List[Tuple[str, str]]]:
     """
@@ -65,6 +67,7 @@ def write_predictions_to_file(predictions, output_file_path):
                     f.write(f"{word} {label}\n")
                 f.write("\n")
 
+
 def parse_test_data(test_data_path: str) -> List[List[str]]:
     """
     Parses the test data file into a list of sequences.
@@ -89,3 +92,7 @@ def parse_test_data(test_data_path: str) -> List[List[str]]:
         sequences.append(seq)
 
     return sequences
+
+
+def _safe_log(x):
+    return -np.inf if x <= 0 else np.log(x)

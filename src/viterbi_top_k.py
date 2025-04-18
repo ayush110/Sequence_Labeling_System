@@ -1,5 +1,9 @@
-
+from typing import Dict, List
 import heapq
+
+import numpy as np
+
+from utils import _safe_log
 
 
 def viterbi_top_k(

@@ -1,10 +1,7 @@
 from typing import Dict, List
 import numpy as np
 
-
-def _safe_log(x):
-    """Avoid log(0) by returning -inf when x is 0 or negative."""
-    return -np.inf if x <= 0 else np.log(x)
+from utils import _safe_log
 
 
 def viterbi(
@@ -73,7 +70,8 @@ def viterbi(
     pi = np.zeros((n, N))  # pi[j][s] = best score for reaching state s at time j
     backpointer = np.zeros((n, N), dtype=int)  # tracks best previous state for reconstruction
 
-    # BASE CASE: initialization for the first observation
+    # FORWARD PASS
+    # base case: pi(0, START) = 1 so only consider paths from START for the first state i=1
     for s in range(N):
         state = idx_to_state[s]
         x_1 = observation_sequence[0]
@@ -87,14 +85,16 @@ def viterbi(
         pi[0][s] = _safe_log(transition) + _safe_log(emission)
         backpointer[0][s] = 0  # no real backpointer at step 0
 
-    # DP RECURSION: iterate over time steps and update the pi table
+    # dp j=(1, ... n)
     for j in range(1, n):
         x_j = observation_sequence[j]
         x_j_idx = obs_to_idx.get(x_j, obs_to_idx.get("#UNK#", -1))
 
         for s in range(N):
+            # take the max of the array that contains pi[ps][s]*A[ps][s]*B[s][x_j_idx]
             max_prob = -np.inf
             best_prev_s = 0
+            # can maximize accross transitions*pi(j-1) since emissions are independent of previous state
             for ps in range(N):
                 # can maximize across transitions * pi(j-1), since emissions are independent of previous state
                 prob = pi[j - 1][ps] + _safe_log(A[ps][s])
@@ -115,10 +115,13 @@ def viterbi(
         # pi(n+1, STOP) = max over all paths that end in state s and transition to STOP
         pi_j[s] = _safe_log(transition) + _safe_log(pi[-1][s])
 
-    # BACKTRACE: reconstruct the most likely state path
+    # BACKWARD PASS (reconstruction)
+    # reconstruct the best path (list of states) should be able to later store top-k
+    # best to stop is the best state from pi_j
     top_1_final_s = np.argmax(pi_j)
     top_1_path = [top_1_final_s]
     for i in range(n - 1, -1, -1):
+        # find the best state
         top_1_path.insert(0, backpointer[i][top_1_path[0]])
 
     # Decode list of state indices into actual state labels
