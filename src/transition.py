@@ -32,6 +32,15 @@ def compute_transition_parameters(training_data: str) -> Dict[str, Dict[str, flo
     for (prev_tag, curr_tag), count in transition_counts.items():
         transition_probs[prev_tag][curr_tag] = count / tag_counts[prev_tag]
 
-    print(f"Transition counts: {transition_counts}")
+    transition_dict = dict(transition_probs)
+    # tolerance = 1e-6  # To handle floating point errors
 
-    return dict(transition_probs)  # convert from defaultdict to regular dict
+    # for state, transitions in transition_dict.items():
+    #     total = sum(transitions.values())
+    #     if abs(total - 1.0) > tolerance:
+    #         print(
+    #             f"❌ Transition probabilities for '{state}' sum to {total:.6f} (should be 1)"
+    #         )
+    #     else:
+    #         print(f"✅ '{state}' OK (sum = {total:.6f})")
+    return transition_dict
