@@ -12,12 +12,12 @@ def compute_transition_parameters(training_data: str) -> Dict[str, Dict[str, flo
     Returns:
         Dict[str, Dict[str, float]]: transition probabilities {prev_tag: {curr_tag: prob}}
     """
-    sentences = get_sequences_dataset(training_data)
+    training_data
 
     transition_counts = Counter()
     tag_counts = Counter()
 
-    for sentence in sentences:
+    for sentence in training_data:
         tags = ['START'] + [tag for _, tag in sentence] + ['STOP']
         for i in range(1, len(tags)):
             prev_tag = tags[i - 1]

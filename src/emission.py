@@ -53,7 +53,7 @@ def generate_output(tags, test_data):
   Generates tag output in proper format in dev.p1.out
   """
   # open the output file in write mode
-  with open("dev.p1.out", "w") as f:
+  with open("../EN/dev.p1.out", "w") as f:
     # write each observation and its corresponding tag
     for sample in test_data:
       for obs in sample:
