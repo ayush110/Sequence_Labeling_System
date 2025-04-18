@@ -2037,8 +2037,8 @@ retaining I-NP
 most I-NP
 of B-VP
 its B-NP
-wine B-UCP
-and I-UCP
+wine I-NP
+and O
 all B-NP
 of I-NP
 its B-NP
@@ -5334,8 +5334,8 @@ said I-NP
 , O
 the B-NP
 market I-NP
-remains B-ADJP
-nervous I-ADJP
+remains B-VP
+nervous B-ADJP
 about B-PP
 Wall B-NP
 Street I-NP
@@ -6688,10 +6688,10 @@ reinforcement I-NP
 brand B-NP
 loyalty I-NP
 will I-NP
-diminish I-NP
-ever B-ADVP
-so I-ADVP
-slightly I-ADVP
+diminish B-VP
+ever I-VP
+so B-ADJP
+slightly I-ADJP
 -- O
 even B-ADVP
 for B-PP
@@ -10544,7 +10544,7 @@ reluctant B-ADJP
 to B-VP
 step I-VP
 up B-PRT
-building B-NP
+building B-VP
 at B-PP
 the B-NP
 moment I-NP
@@ -11157,8 +11157,8 @@ bank I-NP
 five B-NP
 offices I-NP
 will I-NP
-reopen I-NP
-today B-ADVP
+reopen B-VP
+today B-NP
 
 `` O
 But B-NP
@@ -16035,9 +16035,9 @@ GOP I-NP
 convention I-NP
 , O
 abortion B-NP
-was B-VP
-barely B-ADJP
-discussed I-ADJP
+was I-NP
+barely B-VP
+discussed I-VP
 at B-PP
 all B-NP
 , O
@@ -20184,7 +20184,7 @@ parts I-NP
 are B-VP
 getting I-VP
 ever I-VP
-smaller B-ADJP
+smaller B-NP
 , O
 Mr. B-NP
 Johnson I-NP

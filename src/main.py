@@ -15,7 +15,9 @@ def main():
 
     """ PART 2 --- Compute transition parameters and run Viterbi """
     # Compute transition parameters using training data
-    transition_parameters = compute_transition_parameters(training_data)
+    #count number of unique tags in training data 
+    tag_count = len(set(tag for sentence in training_data for _, tag in sentence))
+    transition_parameters = compute_transition_parameters(training_data, tag_count)
 
     # Run the Viterbi algorithm on the test data dev.in
     generate_viterbi_output(test_data, transition_parameters, emission_parameters)

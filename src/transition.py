@@ -3,7 +3,7 @@ from collections import Counter, defaultdict
 from typing import Dict
 
 
-def compute_transition_parameters(training_data: str) -> Dict[str, Dict[str, float]]:
+def compute_transition_parameters(training_data: str, tag_count) -> Dict[str, Dict[str, float]]:
     """
     Computes and returns transition probabilities q(y_i | y_{i-1}) in a nested dict format.
 
@@ -30,8 +30,8 @@ def compute_transition_parameters(training_data: str) -> Dict[str, Dict[str, flo
     transition_probs: Dict[str, Dict[str, float]] = defaultdict(dict)
 
     for (prev_tag, curr_tag), count in transition_counts.items():
-        transition_probs[prev_tag][curr_tag] = count / tag_counts[prev_tag]
+        transition_probs[prev_tag][curr_tag] = (count + 1) / (tag_counts[prev_tag] + tag_count +1) 
 
-    print(f"Transition counts: {transition_counts}")
+    #print(f"Transition counts: {transition_counts}")
 
     return dict(transition_probs)  # convert from defaultdict to regular dict
