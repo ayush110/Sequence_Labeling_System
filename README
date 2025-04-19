@@ -1,4 +1,4 @@
 pip install -r requirements.txt
 
-cd EvalScript
-python3 evalResult.py "../EN/dev.out" "../EN/dev.p2.out"
+python3 src/main.py
+python3 EvalScript/evalResult.py "EN/dev.out" "EN/dev.p2.out"
