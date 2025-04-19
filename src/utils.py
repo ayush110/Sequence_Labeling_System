@@ -96,3 +96,20 @@ def parse_test_data(test_data_path: str) -> List[List[str]]:
 
 def _safe_log(x):
     return -np.inf if x <= 0 else np.log(x)
+
+
+def generate_output(test_data, predict_fn, output_file):
+    """
+    Generic output generator. Takes a prediction function that returns tags for a sentence.
+
+    Args:
+        test_data (List[List[str]]): List of sentences, where each sentence is a list of words.
+        predict_fn (Callable): Function that takes a sentence and returns a list of predicted tags.
+        output_file (str): Path to output file.
+    """
+    with open(output_file, "w") as f:
+        for sentence in test_data:
+            tags = predict_fn(sentence)
+            for word, tag in zip(sentence, tags):
+                f.write(f"{word} {tag}\n")
+            f.write("\n")

@@ -1,37 +1,50 @@
-from utils import get_sequences_dataset
 from collections import Counter, defaultdict
-from typing import Dict
+from typing import Dict, List, Tuple
 
 
-def compute_transition_parameters(training_data: str) -> Dict[str, Dict[str, float]]:
+def compute_transition_parameters(
+    training_data: List[List[Tuple[str, str]]], tags: List[str]
+) -> Dict[str, Dict[str, float]]:
     """
-    Computes and returns transition probabilities q(y_i | y_{i-1}) in a nested dict format.
+    Computes transition probabilities q(y_i | y_{i-1}) with add-one smoothing,
+    ensuring only valid transitions are included (e.g., START → tag, tag → STOP, tag → tag).
 
     Args:
-        training_data (str): path to the training file (e.g., 'EN/train')
+        training_data: list of sentences, each as a list of (word, tag) pairs
+        tags: list of all possible tags (excluding START/STOP)
 
     Returns:
-        Dict[str, Dict[str, float]]: transition probabilities {prev_tag: {curr_tag: prob}}
+        Nested dictionary of transition probabilities: {prev_tag: {curr_tag: probability}}
     """
-    training_data
-
     transition_counts = Counter()
     tag_counts = Counter()
 
+    # Count transitions and tag occurrences
     for sentence in training_data:
-        tags = ["START"] + [tag for _, tag in sentence] + ["STOP"]
-        for i in range(1, len(tags)):
-            prev_tag = tags[i - 1]
-            curr_tag = tags[i]
+        tag_sequence = ["START"] + [tag for _, tag in sentence] + ["STOP"]
+        for i in range(1, len(tag_sequence)):
+            prev_tag = tag_sequence[i - 1]
+            curr_tag = tag_sequence[i]
             transition_counts[(prev_tag, curr_tag)] += 1
             tag_counts[prev_tag] += 1
 
-    # Convert flat dict to nested dict
     transition_probs: Dict[str, Dict[str, float]] = defaultdict(dict)
 
-    for (prev_tag, curr_tag), count in transition_counts.items():
-        transition_probs[prev_tag][curr_tag] = count / tag_counts[prev_tag]
+    # Valid transitions:
+    # START → tag
+    for curr_tag in tags:
+        count = transition_counts.get(("START", curr_tag), 0)
+        total_prev = tag_counts.get("START", 0)
+        transition_probs["START"][curr_tag] = (count + 1) / (total_prev + len(tags))
 
-    print(f"Transition counts: {transition_counts}")
+    # tag → tag or tag → STOP
+    for prev_tag in tags:
+        possible_next = tags + ["STOP"]
+        total_prev = tag_counts.get(prev_tag, 0)
+        for curr_tag in possible_next:
+            count = transition_counts.get((prev_tag, curr_tag), 0)
+            transition_probs[prev_tag][curr_tag] = (count + 1) / (
+                total_prev + len(possible_next)
+            )
 
-    return dict(transition_probs)  # convert from defaultdict to regular dict
+    return dict(transition_probs)
