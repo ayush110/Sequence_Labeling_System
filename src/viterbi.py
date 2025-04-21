@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 
 from utils import _safe_log
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 def print_transition_matrix(A, states, initial_probs, final_probs):
