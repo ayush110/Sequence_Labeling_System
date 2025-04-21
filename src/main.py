@@ -2,6 +2,10 @@ from emission import compute_emission_parameters, emission_predict
 from transition import compute_transition_parameters
 from viterbi import viterbi_predict
 from viterbi_top_k import viterbi_top_k_predict
+from structured_perceptron import (
+    structured_perceptron_predict,
+    train_structured_perceptron
+)
 from utils import (
     get_sequences_dataset,
     parse_test_data,
@@ -43,7 +47,17 @@ def main():
         "../EN/dev.p3.out",
     )
 
-    """ PART 4 --- 5 """
+    """ PART 4 --- Structured Perceptron """
+    tags = list(set(tag for sentence in training_data for _, tag in sentence))
+    trained_weights = train_structured_perceptron(training_data, tags)
+
+    generate_output(
+        test_data,
+        lambda sent: structured_perceptron_predict(
+            sent, training_data, trained_weights, tags
+        ),
+        "../EN/dev.p4.out",
+    )
 
 
 if __name__ == "__main__":
