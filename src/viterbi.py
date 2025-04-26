@@ -33,23 +33,23 @@ def print_transition_matrix(A, states, initial_probs, final_probs):
         transition_matrix[i + 1, -1] = final_probs.get(state, 0)
 
     # Optional: check row sums
-    print("\nTransition Matrix:")
+    #print("\nTransition Matrix:")
     df = pd.DataFrame(
         transition_matrix,
         index=["START"] + states + ["STOP"],
         columns=["START"] + states + ["STOP"],
     )
-    print(df.round(4))
+    #print(df.round(4))
 
-    # Check that non-"START" and non-"STOP" rows sum to 1.0
-    print("\nRow Sums:")
-    for i, state in enumerate(["START"] + states + ["STOP"]):
-        row_sum = transition_matrix[i].sum()
-        print(f"{state:>8}: sum = {row_sum:.4f}", end="")
-        if state not in {"START", "STOP"} and not np.isclose(row_sum, 1.0, atol=1e-2):
-            print("  Warning: Row does not sum to 1.0")
-        else:
-            print()
+    ## Check that non-"START" and non-"STOP" rows sum to 1.0
+    # print("\nRow Sums:")
+    # for i, state in enumerate(["START"] + states + ["STOP"]):
+    #     row_sum = transition_matrix[i].sum()
+    #     print(f"{state:>8}: sum = {row_sum:.4f}", end="")
+    #     if state not in {"START", "STOP"} and not np.isclose(row_sum, 1.0, atol=1e-2):
+    #         print("  Warning: Row does not sum to 1.0")
+    #     else:
+    #         print()
 
 
 def print_emission_matrix(B, state_to_idx, obs_to_idx):
@@ -79,52 +79,52 @@ def print_emission_matrix(B, state_to_idx, obs_to_idx):
     B_normalized = B / row_sums  # Normalize each row
 
     # Print out the normalized matrix
-    print("\nNormalized Emission Matrix (Rows sum to 1):")
+    # "\nNormalized Emission Matrix (Rows sum to 1):")
     df_normalized = pd.DataFrame(
         B_normalized, index=list(state_to_idx.keys()), columns=list(obs_to_idx.keys())
     )
-    print(df_normalized.round(4))
+    # print(df_normalized.round(4))
 
     # Check if the rows sum to 1.0
-    print("\nRow Sums Check:")
-    for state, row in zip(state_to_idx.keys(), B_normalized):
-        row_sum = row.sum()
-        print(f"{state:>10}: sum = {row_sum:.4f}", end="")
-        if not np.isclose(row_sum, 1.0, atol=1e-2):
-            print("  Warning: Row does not sum to 1.0")
-        else:
-            print()
+    # print("\nRow Sums Check:")
+    # for state, row in zip(state_to_idx.keys(), B_normalized):
+    #     row_sum = row.sum()
+    #     print(f"{state:>10}: sum = {row_sum:.4f}", end="")
+    #     if not np.isclose(row_sum, 1.0, atol=1e-2):
+    #         print("  Warning: Row does not sum to 1.0")
+    #     else:
+    #         print()
 
     # Check for NaN or infinite values in the matrix
-    print("\nInvalid Values Check:")
-    if np.any(np.isnan(B_normalized)):
-        print("Warning: Matrix contains NaN values.")
-    if np.any(np.isinf(B_normalized)):
-        print("Warning: Matrix contains infinite values.")
-    else:
-        print("Matrix is valid, no NaN or infinite values.")
+    # print("\nInvalid Values Check:")
+    # if np.any(np.isnan(B_normalized)):
+    #     print("Warning: Matrix contains NaN values.")
+    # if np.any(np.isinf(B_normalized)):
+    #     print("Warning: Matrix contains infinite values.")
+    # else:
+    #     print("Matrix is valid, no NaN or infinite values.")
 
     # Optionally: Calculate and print the most likely observation for each state
-    print("\nMost Likely Observation for Each State:")
+    # print("\nMost Likely Observation for Each State:")
     most_likely = np.argmax(
         B_normalized, axis=1
     )  # Index of the max probability for each state
     for state, idx in state_to_idx.items():
         best_obs = list(obs_to_idx.keys())[most_likely[idx]]
-        print(f"State {state}: Most likely observation is {best_obs}")
+        # print(f"State {state}: Most likely observation is {best_obs}")
 
 
-def print_viterbi_table(pi, backpointer, observation_sequence, idx_to_state, states):
-    n = len(observation_sequence)
-    print("\nViterbi Table (log-probabilities and backpointers):")
-    for t in range(n):
-        print(f"t={t}, Observation={observation_sequence[t]}")
-        for s in range(len(states)):
-            state = idx_to_state[s]
-            print(
-                f"  State={state}, Log-Probability={pi[t][s]}, Backpointer={backpointer[t][s]}"
-            )
-        print("-" * 30)
+# def print_viterbi_table(pi, backpointer, observation_sequence, idx_to_state, states):
+#     n = len(observation_sequence)
+#     print("\nViterbi Table (log-probabilities and backpointers):")
+#     for t in range(n):
+#         print(f"t={t}, Observation={observation_sequence[t]}")
+#         for s in range(len(states)):
+#             state = idx_to_state[s]
+#             print(
+#                 f"  State={state}, Log-Probability={pi[t][s]}, Backpointer={backpointer[t][s]}"
+#             )
+#         print("-" * 30)
 
 
 def viterbi(
@@ -213,9 +213,9 @@ def viterbi(
         pi[0][s] = _safe_log(transition) + _safe_log(emission)
         backpointer[0][s] = 0  # no real backpointer at step 0
 
-        print(
-            f"t=0, state={state}, transition={transition}, emission={emission}, pi={pi[0][s]}"
-        )
+        # print(
+        #     f"t=0, state={state}, transition={transition}, emission={emission}, pi={pi[0][s]}"
+        # )
 
     # dp j=(1, ... n)
     for j in range(1, n):
@@ -237,10 +237,10 @@ def viterbi(
             pi[j][s] = max_prob + _safe_log(emission)
             backpointer[j][s] = best_prev_s
 
-            print(
-                f"t={j}, curr_state={idx_to_state[s]}, prev_state={idx_to_state[best_prev_s]}, "
-                f"max_prob={max_prob}, emission={emission}, pi={pi[j][s]}"
-            )
+            # print(
+            #     f"t={j}, curr_state={idx_to_state[s]}, prev_state={idx_to_state[best_prev_s]}, "
+            #     f"max_prob={max_prob}, emission={emission}, pi={pi[j][s]}"
+            # )
 
     # FINAL STEP: include transition to STOP
     pi_j = np.zeros(N)
@@ -249,9 +249,9 @@ def viterbi(
         transition = final_probabilities.get(state, 0.0)
         # pi(n+1, STOP) = max over all paths that end in state s and transition to STOP
         pi_j[s] = _safe_log(transition) + _safe_log(pi[-1][s])
-        print(
-            f"Final transition from state={state} to STOP, prob={transition}, pi_j={pi_j[s]}"
-        )
+        # print(
+        #     f"Final transition from state={state} to STOP, prob={transition}, pi_j={pi_j[s]}"
+        # )
 
     top_1_final_s = np.argmax(pi_j)
     # print(
@@ -267,8 +267,8 @@ def viterbi(
 
     # Decode list of state indices into actual state labels
     decoded_states = [idx_to_state[i] for i in top_1_path]
-    print(f"Decoded sequence: {decoded_states}")
-    print_viterbi_table(pi, backpointer, observation_sequence, idx_to_state, states)
+    # print(f"Decoded sequence: {decoded_states}")
+    # print_viterbi_table(pi, backpointer, observation_sequence, idx_to_state, states)
 
     return decoded_states
 

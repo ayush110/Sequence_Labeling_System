@@ -190,10 +190,10 @@ def train_structured_perceptron(training_data: List[List[Tuple[str, str]]], tags
 
     # iterate for some provided # of iterations
     for iteration in range(max_iter):
-        print(f"currently on iteration {iteration + 1}/{max_iter}")
+        #print(f"currently on iteration {iteration + 1}/{max_iter}")
         # go through each sentence in the training data    
         for index, sentence in enumerate(training_data):
-            print(f"currently on sentence {index + 1}/{len(training_data)}")
+            #print(f"currently on sentence {index + 1}/{len(training_data)}")
             # grab words and associated gold tags
             words = [word for word, _ in sentence]
             gold_tags = [tag for _, tag in sentence]

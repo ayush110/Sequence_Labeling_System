@@ -113,7 +113,7 @@ def viterbi_top_k(
     for neg_score, path in top_k_paths:
         # convert the state indices to state names
         path = [idx_to_state[i] for i in path]
-        print(f"Path: {path}, Score: {-neg_score}")
+        #print(f"Path: {path}, Score: {-neg_score}")
 
     # since we are using a max-heap with negative scores, the k-th largest path will be the first element
     # imagine -0.1, -0.2, -0.3, -0.4, -0.5
@@ -122,7 +122,7 @@ def viterbi_top_k(
     decoded_kth_largest_path = [
         idx_to_state[i] for i in kth_largest_path
     ]  # convert the state indices to state names
-    print(f"K-th largest path: {decoded_kth_largest_path}")
+    #print(f"K-th largest path: {decoded_kth_largest_path}")
     return decoded_kth_largest_path
 
 

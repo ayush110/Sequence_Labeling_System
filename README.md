@@ -53,8 +53,8 @@ To evaluate your output using the official script:
 ```bash
 python EvalScript/evalResult.py EN/{reference_file}.out EN/{your_output_file}.out
 
-#Example
-python EvalScript/evalResult.py EN/dev.out EN/dev.p2.out
+#Example to run the test output
+python EvalScript/evalResult.py EN/test.out EN/test.p4.out
 ```
 
 ## 📂 Directory Structure
