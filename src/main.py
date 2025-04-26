@@ -1,3 +1,6 @@
+import sys
+import os
+
 from emission import compute_emission_parameters, emission_predict
 from transition import compute_transition_parameters
 from viterbi import viterbi_predict
@@ -16,15 +19,19 @@ from utils import (
 
 def main():
 
-    training_data = get_sequences_dataset("../EN/train")
-    test_data = parse_test_data("../EN/dev.in")
+    input_filename = sys.argv[1] if len(sys.argv) > 1 else "dev.in"
+    input_path = os.path.join("./EN", input_filename)
+    output_prefix = input_filename.replace(".in", "")
+
+    training_data = get_sequences_dataset("./EN/train")
+    test_data = parse_test_data(input_path)
 
     """ PART 1 --- Compute emission parameters """
     emission_parameters = compute_emission_parameters(training_data)
     generate_output(
         test_data,
         lambda sent: emission_predict(sent, emission_parameters),
-        "../EN/dev.p1.out",
+        "./EN/dev.p1.out",
     )
 
     """ PART 2 --- Compute transition parameters and run Viterbi """
@@ -35,7 +42,7 @@ def main():
     generate_output(
         test_data,
         lambda sent: viterbi_predict(sent, transition_parameters, emission_parameters),
-        "../EN/dev.p2.out",
+        "./EN/dev.p2.out",
     )
 
     """ PART 3 --- 4th Best Viterbi Output Sequence """
@@ -44,7 +51,7 @@ def main():
         lambda sent: viterbi_top_k_predict(
             sent, transition_parameters, emission_parameters, top_k=4
         ),
-        "../EN/dev.p3.out",
+        "./EN/dev.p3.out",
     )
 
     """ PART 4 --- Structured Perceptron """
@@ -56,7 +63,7 @@ def main():
         lambda sent: structured_perceptron_predict(
             sent, training_data, trained_weights, tags
         ),
-        "../EN/dev.p4.out",
+        f"./EN/{output_prefix}.p4.out",
     )
 
 
