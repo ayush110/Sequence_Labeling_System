@@ -199,5 +199,5 @@ if __name__ == "__main__":
     train_file = "EN/train"
     dev_in_file = "EN/dev.in"
     dev_out_file = "EN/dev.out"
-    output_file = "EN/dev.p44.out"
+    output_file = "EN/dev.p4_crf.out"
     train_crf(train_file, dev_in_file, dev_out_file, output_file, epochs=5, lr=0.1)
